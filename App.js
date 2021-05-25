@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { Camera } from 'expo-camera';
+import base64 from 'react-native-base64';
+import axios from 'axios';
 
 export default function App() {
   const [hasPermission, setHasPermission] = useState();
@@ -12,14 +14,40 @@ export default function App() {
 
     if (cam.current) {
       const option = { quality: 0.5, base64: true, skipProcessing: false };
-      let photo = await cam.current.takePictureAsync(option);
-
-      console.log(cam.current.getSupportedRatiosAsync());
+      let photo = await cam.current.takePictureAsync(option);      
       const source = photo.uri;
-
+     
       if (source) {
         cam.current.resumePreview();
-        console.log("picture source", source);
+        //let decodePhoto= base64.decode(photo.base64);
+        var newPhotoDni = {
+          uri: photo.uri,
+          type: 'image/jpeg',
+          name: 'dni_front',
+        };
+        var newPhoto = {
+          uri: photo.uri,
+          type: 'image/jpeg',
+          name: 'photo',
+        };
+        var formData = new FormData();
+        formData.append("dni_front", newPhotoDni);
+        formData.append("photo", newPhoto);
+        
+        axios({
+          method: "post",
+          url: "http://18.221.216.28:8000/api/users/image_identification",
+          data: formData,
+          headers: { "Content-Type": "multipart/form-data" },
+        })
+          .then(function (response) {
+            //handle success
+            console.log(response.data);
+          })
+          .catch(function (response) {
+            //handle error
+            console.log(response);
+          });
       }
     }
 
